@@ -43,6 +43,7 @@ figure,sigma(G_min)
 %% 3.1.4 RGA
 rga = G_min.*(inv(G_min))';
 rga_0 = evalfr(rga,0);
+rga_wc = evalfr(rga,1i*0.1);
 
 %% 3.1.5 step
 figure, step(G_min)
@@ -81,6 +82,7 @@ figure,sigma(G_nmin)
 %% 3.1.4 RGA
 rga = G_nmin.*(inv(G_nmin))';
 rga_0 = evalfr(rga,0);
+rga_wc = evalfr(rga,1i*0.02);
 
 %% 3.1.5 step
 figure,step(G_nmin)
