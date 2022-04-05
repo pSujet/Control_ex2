@@ -41,7 +41,7 @@ tzero(G_min)
 figure,sigma(G_min)
 
 %% 3.1.4 RGA
-rga = G_min.*(1/G_min)';
+rga = G_min.*(inv(G_min))';
 rga_0 = evalfr(G_min,0);
 
 %% 3.1.5 step
@@ -50,8 +50,8 @@ figure, step(G_min)
 %% ===== non-minimum phase =====
 %% 3.1.1
 % create system with pre-defined function
-sysmp = nonminphase;
-[A,B,C,D] = ssdata(sysmp);
+sysnmp = nonminphase;
+[A,B,C,D] = ssdata(sysnmp);
 
 % add label for clarity
 states = {'tank1' 'tank2' 'tank3' 'tank4'};
@@ -79,15 +79,17 @@ tzero(G_nmin)
 figure,sigma(G_nmin)
 
 %% 3.1.4 RGA
-rga = G_nmin.*(1/G_nmin)';
-rga_0 = evalfr(G_nmin,0);
-
+rga = G_nmin.*(inv(G_nmin))';
+rga_0 = evalfr(rga,0);
+G_nmin0 = 
+rga = G_nmin0.*(inv(G_nmin0))';
 %% 3.1.5 step
 figure,step(G_nmin)
 
 %% ========== 3.2 Decentralized Control ============
 %% ===== minimum phase =====
 %% 3.2.1 Decentralized controller
+%% f1
 phi_m = pi/3;
 wc = 0.1;
 T1 = tan(-pi/2 + phi_m - angle(evalfr(G_min(1,1),1i*wc)))/wc;
@@ -97,42 +99,57 @@ K1 = 1/m;
 f1 = K1*f1;
 figure,margin(f1*G_min(1,1))
 
+%% f2
+T2 = tan(-pi/2 + phi_m - angle(evalfr(G_min(2,2),1i*wc)))/wc;
+f2 = 1+1/(s*T2);
+[m,phase] = bode(f2*G_min(2,2),wc);
+K2 = 1/m;
+f2 = K2*f2;
+figure,margin(f2*G_min(2,2))
+
+% create controller matrix
+F = [f1 0;0 f2];
+G = G_min;
+
 %% 3.2.2 Decentralized controller
-S = (eye(2)+)
+S = inv(eye(2) + G_min * F);
+T = inv(eye(2) + G_min * F)*G_min*F;
+
+%% ===== non-minimum phase =====
+%% 3.2.1 Decentralized controller
+%% f1
+phi_m = pi/3;
+wc = 0.02;
+T1 = tan(-pi/2 + phi_m - angle(evalfr(G_nmin(1,2),1i*wc)))/wc;
+f1 = 1+1/(s*T1);
+[m,phase] = bode(f1*G_nmin(1,2),wc);
+K1 = 1/m;
+f1 = K1*f1;
+figure,margin(f1*G_nmin(1,2))
+
+%% f2
+T2 = tan(-pi/2 + phi_m - angle(evalfr(G_nmin(2,1),1i*wc)))/wc;
+f2 = 1+1/(s*T2);
+[m,phase] = bode(f2*G_nmin(2,1),wc);
+K2 = 1/m;
+f2 = K2*f2;
+figure,margin(f2*G_nmin(2,1))
+
+% create controller matrix
+F = [0 f1;f2 0];
+G = G_nmin;
+
+%% 3.2.2 Decentralized controller
+S = inv(eye(2) + G_nmin * F);
+T = inv(eye(2) + G_nmin * F)*G_nmin*F;
+
+%% 3.2.3 Simulink
+closedloop
 
 
-%%
-bode(G_min(1,1));
-s = tf('s');
-K1 = 1;
-T1 = 1;
-f1 = K1*(1+1/(s*T1));
-figure;
-bode(f1*G_min(1,1))
-
-%%
-s = tf('s');
-K1 = 1;
-T1 = 1;
-f1 = K1*(1+1/(s*T1));
-
-K2 = 1;
-T2 = 1;
-f2 = K2*(1+1/(s*T2));
 
 
-
-
-
-
-
-
-
-
-
-
-
-
+%% ========= EXCESSS ==========
 %% test
 Gs = 1/(s+1)*[1 -1;1.1 -1];
 rgas = Gs.*(1/Gs)';
@@ -143,10 +160,6 @@ val = evalfr(rgas,j*wc)
 G_min = tf([1 2],[3 4 5]) %(as an example))
 w = 0; % for example 3 radians/sec
 val = evalfr(G_min,j*w)
-
-
-
-
 
 %% Plot
 s = tf('s');

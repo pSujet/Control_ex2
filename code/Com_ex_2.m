@@ -41,8 +41,8 @@ tzero(G_min)
 figure,sigma(G_min)
 
 %% 3.1.4 RGA
-rga = G_min.*(1/G_min)';
-rga_0 = evalfr(G_min,0);
+rga = G_min.*(inv(G_min))';
+rga_0 = evalfr(rga,0);
 
 %% 3.1.5 step
 figure, step(G_min)
@@ -50,8 +50,8 @@ figure, step(G_min)
 %% ===== non-minimum phase =====
 %% 3.1.1
 % create system with pre-defined function
-sysmp = nonminphase;
-[A,B,C,D] = ssdata(sysmp);
+sysnmp = nonminphase;
+[A,B,C,D] = ssdata(sysnmp);
 
 % add label for clarity
 states = {'tank1' 'tank2' 'tank3' 'tank4'};
@@ -79,8 +79,8 @@ tzero(G_nmin)
 figure,sigma(G_nmin)
 
 %% 3.1.4 RGA
-rga = G_nmin.*(1/G_nmin)';
-rga_0 = evalfr(G_nmin,0);
+rga = G_nmin.*(inv(G_nmin))';
+rga_0 = evalfr(rga,0);
 
 %% 3.1.5 step
 figure,step(G_nmin)
