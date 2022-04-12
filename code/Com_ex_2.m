@@ -86,7 +86,6 @@ rga_wc = evalfr(rga,1i*0.02);
 
 %% 3.1.5 step
 figure,step(G_nmin)
-
 %% ========== 3.2 Decentralized Control ============
 %% ===== minimum phase =====
 %% 3.2.1 Decentralized controller
@@ -110,11 +109,34 @@ figure,margin(f2*G_min(2,2))
 
 % create controller matrix
 F = [f1 0;0 f2];
-G = G_min;
+G = G_min;  
 
 %% 3.2.2 Decentralized controller
 S = inv(eye(2) + G_min * F);
 T = inv(eye(2) + G_min * F)*G_min*F;
+
+figure;
+sigma(S);
+hold;
+sigma(T);
+
+L = G*F;
+
+figure;
+set(gcf, 'Position', get(0, 'Screensize'));
+
+h=subplot(2,1,1);
+margin(L(1,1));
+grid;
+text('FontSize', 24);
+myAxes=findobj(h,'Type','Axes');
+exportgraphics(myAxes,'margin_L11.pdf');
+
+h=subplot(2,1,2);
+margin(L(2,2));
+grid;
+myAxes=findobj(h,'Type','Axes');
+exportgraphics(myAxes,'margin_L22.pdf');
 
 %% ===== non-minimum phase =====
 %% 3.2.1 Decentralized controller
@@ -137,15 +159,88 @@ f2 = K2*f2;
 figure,margin(f2*G_nmin(2,1))
 
 % create controller matrix
-F = [0 f1;f2 0];
+F = [0 f2;f1 0];
 G = G_nmin;
 
 %% 3.2.2 Decentralized controller
-S = inv(eye(2) + G_nmin * F);
-T = inv(eye(2) + G_nmin * F)*G_nmin*F;
+
+L = minreal(G*F);
+S = inv(eye(2) + L);
+T = (eye(2) + L)^-1*L;
+T = minreal(T);
+
+figure;
+sigma(S);
+hold;
+sigma(T);
+
+% figure;
+% set(gcf, 'Position', get(0, 'Screensize'));
+% 
+% h=subplot(2,1,1);
+% margin(L(1,1));
+% grid;
+% text('FontSize', 24);
+% myAxes=findobj(h,'Type','Axes');
+% exportgraphics(myAxes,'margin_L11.pdf');
+% 
+% h=subplot(2,1,2);
+% margin(L(2,2));
+% grid;
+% myAxes=findobj(h,'Type','Axes');
+% exportgraphics(myAxes,'margin_L22.pdf');
+
+%%
+figure('Name', 'Bode');
+margin(L(1, 1));
+set(findall(gcf,'-property','FontSize'),'FontSize',15)
+set(gcf, 'Position', get(0, 'Screensize'));
+grid;
+saveas(gcf, 'L11_margin.png');
+
+figure('Name', 'Bode')
+margin(L(2, 2));
+set(findall(gcf,'-property','FontSize'),'FontSize',15)
+set(gcf, 'Position', get(0, 'Screensize'));
+grid;
+saveas(gcf, 'L22_margin.png')
 
 %% 3.2.3 Simulink
 closedloop
+
+%% plot simulink
+
+y1 = yout.Data(:,1);
+y2 = yout.Data(:,2);
+
+u1 = uout.Data(:,1);
+u2 = uout.Data(:,2);
+
+figure;
+set(gcf, 'Position', get(0, 'Screensize'));
+plot(tout,y1)
+hold on;
+plot(tout,y2)
+legend('y1','y2');
+title('System output step response');
+xlabel('Time (s)');
+ylabel('Output');
+grid;
+set(findall(gcf,'-property','FontSize'),'FontSize',24)
+% saveas(gcf, 'nonmin_phase_y.pdf')
+
+figure;
+set(gcf, 'Position', get(0, 'Screensize'));
+plot(tout,u1)
+hold on;
+plot(tout,u2)
+legend('u1','u2');
+title('Control output step response');
+xlabel('Time (s)');
+ylabel('Output');
+grid;
+set(findall(gcf,'-property','FontSize'),'FontSize',24)
+% saveas(gcf, 'nonmin_phase_u.pdf')
 
 
 
